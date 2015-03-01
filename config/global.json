@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "_default": {
+            "link": "jound"
+        }, 
+        "jound": {
+            "applicationId": "hq7NqhxfTb2p7vBij2FVjlWj2ookUMIPTmHVF9ZH", 
+            "masterKey": "5AUkhNy5iHbwLA0Z6zNVNMLBxy4idgZ9CZCPurTm"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.13"
+    }
+}
