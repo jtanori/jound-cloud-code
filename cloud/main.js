@@ -79,17 +79,25 @@ Parse.Cloud.afterSave('_User', function(request){
             message: {
                 subject: "Bienvenido a Jound",
                 from_email: 'no-reply@jound.mx',
-                from_name: 'Jaime Tanori',
+                from_name: 'Jaime Tanori & Jound',
                 to: [
                     {
                         email: email
                     }
-                ]
+                ],
+                headers: {
+                	'Reply-To': 'support@jound.mx'
+                }
             },
             template_name: 'joundwelcome',
             template_content: [
                 {
-                    "name": user.get('username')
+                    name: 'username',
+                    content: user.get('username')
+                },
+                {
+                	name: 'password',
+                	content: user.get('password')
                 }
             ],
             async: true
@@ -121,44 +129,73 @@ Parse.Cloud.afterSave('Message', function(request){
     }else{
         user
         	.fetch()
-        	.then(function(){
-        		var name = user.get('name');
-        		var phone = user.get('phone');
-        		var email = user.get('email');
-        		var canBeContacted = user.get('canBeContacted');
+        	.then(function(u){
+        		user = u.toJSON();
 
-        		Mandrill.sendTemplate({
-		            message: {
-		                subject: "Tiene un nuevo mensaje en Jound",
-		                from_email: 'no-reply@jound.mx',
-		                from_name: 'Jound Mensajes',
-		                to: [
-		                    {
-		                        email: email,
-		                        name: venue.get('name')
-		                    }
-		                ]
-		            },
-		            template_name: 'joundmessage',
-		            template_content: [
-		                {
-		                    name: name,
-		                    phone: phone,
-		                    email: email,
-		                    canBeContacted: canBeContacted
-		                }
-		            ],
-		            async: true
-		        },{
-		            success: function(httpResponse) {
-		                console.log(httpResponse);
-		                console.log("Mensaje Enviado a: " + venue.get('name') + ':' + venue.id);
-		            },
-		            error: function(httpResponse) {
-		                console.error(httpResponse);
-		                console.error("No hemos podido enviar su mensaje, por favor intente de nuevo.");
-		            }
-		        });
+        		venue
+        			.fetch()
+        			.then(function(){
+
+	        			var name = user.name;
+		        		var phone = user.phone;
+		        		var email = user.email;
+		        		var msg = message.message;
+		        		var canBeContacted = user.canBeContacted;
+
+		        		console.log(canBeContacted);
+		        		console.log('Can be contacted?');
+
+		        		Mandrill.sendTemplate({
+				            message: {
+				                subject: "Tiene un nuevo mensaje en Jound",
+				                from_email: 'no-reply@jound.mx',
+				                from_name: 'Jound Mensajes',
+				                to: [
+				                    {
+				                        email: venue.get('email_address'),
+				                        name: venue.get('name')
+				                    }
+				                ],
+				                headers: {
+				                	'Reply-To': 'support@jound.mx'
+				                }
+				            },
+				            template_name: 'joundmessage',
+				            template_content: [
+				            	{
+				            		name: 'name',
+				            		content: name
+				            	},
+				            	{
+				            		name: 'email',
+				            		content: email
+				            	},
+				            	{
+				            		name: 'contact',
+				            		content: canBeContacted ? 'El usuario ha indicado que pueden contactarle por telefono: ' + phone : ''
+				            	},
+				            	{
+				            		name: 'message',
+				            		content: message.get('message')
+				            	}
+				            ],
+				            async: true
+				        },{
+				            success: function(httpResponse) {
+				                console.log(httpResponse);
+				                console.log("Mensaje Enviado a: " + venue.get('name') + ':' + venue.id);
+				            },
+				            error: function(httpResponse) {
+				                console.error(httpResponse);
+				                console.error("No hemos podido enviar su mensaje, por favor intente de nuevo.");
+				            }
+				        });
+        			})
+        			.fail(function(e){
+		        		console.log('Ha ocurrido un error al enviar el mesaje');
+		        		console.log(e);
+		        		console.log('----------------------------------------')
+		        	});
         	})
         	.fail(function(e){
         		console.log('Ha ocurrido un error al enviar el mesaje');
